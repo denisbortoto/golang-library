@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:14.1-alpine
+    container_name: "database"
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DATABASE=library
+    networks:
+      - fullstack
+    volumes:
+      - "C:/Users/Denis/Desktop/Dev/Golang/library:/var/lib/postgres/data"
+      - "./postgres/create.sh:/docker-entrypoint-initdb.d/create.sh"
+
+networks:
+  fullstack:
+    driver: bridge
+
+# library:
+#   container_name: "library-api" 
+#   enviroment:
+#     DB_USERNAME: "postgres"
+#     DB_PASSWORD: "postgres"
+#     DB_HOST: "db"
+#     DB_PORT: "5432"
+#   ports:
+#     - "5000:5000"
+#   depends_on:
+#     - db
+#   networks:
+#     - "fullstack"
