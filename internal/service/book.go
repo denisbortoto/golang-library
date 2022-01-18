@@ -8,7 +8,9 @@ import (
 	"github.com/google/uuid"
 )
 
-type service struct{}
+type service struct {
+	repo repository.BookRepository
+}
 
 type BookService interface {
 	Validate(book *entity.Book) error
@@ -19,12 +21,10 @@ type BookService interface {
 	Delete(book_id uuid.UUID) (int64, error)
 }
 
-var (
-	repo repository.BookRepository = repository.NewBookRepository()
-)
-
-func NewBookService() BookService {
-	return &service{}
+func NewBookService(bookRepository repository.BookRepository) BookService {
+	return &service{
+		repo: bookRepository,
+	}
 }
 
 func (*service) Validate(book *entity.Book) error {
@@ -48,22 +48,22 @@ func (*service) Validate(book *entity.Book) error {
 	return nil
 }
 
-func (*service) Create(book *entity.Book) (*entity.Book, error) {
-	return repo.Save(book)
+func (s *service) Create(book *entity.Book) (*entity.Book, error) {
+	return s.repo.Save(book)
 }
 
-func (*service) Update(book entity.Book) (int64, error) {
-	return repo.Update(book)
+func (s *service) Update(book entity.Book) (int64, error) {
+	return s.repo.Update(book)
 }
 
-func (*service) GetById(book_id uuid.UUID) (entity.Book, error) {
-	return repo.GetById(book_id)
+func (s *service) GetById(book_id uuid.UUID) (entity.Book, error) {
+	return s.repo.GetById(book_id)
 }
 
-func (*service) GetAll() ([]entity.Book, error) {
-	return repo.GetAll()
+func (s *service) GetAll() ([]entity.Book, error) {
+	return s.repo.GetAll()
 }
 
-func (*service) Delete(book_id uuid.UUID) (int64, error) {
-	return repo.Delete(book_id)
+func (s *service) Delete(book_id uuid.UUID) (int64, error) {
+	return s.repo.Delete(book_id)
 }

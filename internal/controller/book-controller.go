@@ -12,14 +12,29 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var (
-	bookService service.BookService = service.NewBookService()
-)
+type BookController struct {
+	service service.BookService
+}
 
-func GetBooks(w http.ResponseWriter, r *http.Request) {
+func NewBookController(bookService service.BookService) BookController {
+	return BookController{
+		service: bookService,
+	}
+}
+
+func (b *BookController) Routes(router *mux.Router) {
+	router.HandleFunc("/", Home).Methods("GET")
+	router.HandleFunc("/books", b.GetBooks).Methods("GET")
+	router.HandleFunc("/books/{id}", b.GetBook).Methods("GET")
+	router.HandleFunc("/books", b.CreateBook).Methods("POST")
+	router.HandleFunc("/books/{id}", b.UpdateBook).Methods("PATCH")
+
+}
+
+func (b *BookController) GetBooks(w http.ResponseWriter, r *http.Request) {
 	/* GetBooks function is used to communicate with the service layer to validate the business logic
 	and return all books listed in the application */
-	books, err := bookService.GetAll()
+	books, err := b.service.GetAll()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(errors.ServiceError{Message: "Error getting books"})
@@ -28,7 +43,7 @@ func GetBooks(w http.ResponseWriter, r *http.Request) {
 	utils.ToJson(w, books)
 }
 
-func GetBook(w http.ResponseWriter, r *http.Request) {
+func (b *BookController) GetBook(w http.ResponseWriter, r *http.Request) {
 	/* GetBook function is used to communicate with the service layer to validate the business logic
 	and return the book specified with the ID */
 	params := mux.Vars(r)
@@ -39,7 +54,7 @@ func GetBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := bookService.GetById(book_id)
+	result, err := b.service.GetById(book_id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(errors.ServiceError{Message: "Book not found"})
@@ -48,7 +63,7 @@ func GetBook(w http.ResponseWriter, r *http.Request) {
 	utils.ToJson(w, result)
 }
 
-func CreateBook(w http.ResponseWriter, r *http.Request) {
+func (b *BookController) CreateBook(w http.ResponseWriter, r *http.Request) {
 	/* CreateBook function is used to communicate with the service layer to validate the business logic
 	in order to insert a new book in the database */
 
@@ -64,14 +79,14 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err1 := bookService.Validate(&book)
+	err1 := b.service.Validate(&book)
 	if err1 != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(errors.ServiceError{Message: err1.Error()})
 		return
 	}
 
-	result, err2 := bookService.Create(&book)
+	result, err2 := b.service.Create(&book)
 	if err2 != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(errors.ServiceError{Message: "Error creating the book"})
@@ -80,7 +95,7 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 	utils.ToJson(w, result)
 }
 
-func UpdateBook(w http.ResponseWriter, r *http.Request) {
+func (b *BookController) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	/* UpdateBook function is used to communicate with the service layer to validate the business logic
 	in order to update information on a existing book in the database */
 	params := mux.Vars(r)
@@ -99,7 +114,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	book.Id = book_id
-	result, err := bookService.Update(book)
+	result, err := b.service.Update(book)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(errors.ServiceError{Message: "Error updating the book"})
@@ -108,7 +123,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	utils.ToJson(w, result)
 }
 
-func DeleteBook(w http.ResponseWriter, r *http.Request) {
+func (b *BookController) DeleteBook(w http.ResponseWriter, r *http.Request) {
 	/* DeleteBook function is used to communicate with the service layer to validate the business logic
 	in order to delete a existing book from the database */
 	params := mux.Vars(r)
@@ -119,7 +134,7 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := bookService.Delete(book_id)
+	result, err := b.service.Delete(book_id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(errors.ServiceError{Message: "Error deleting the book"})
